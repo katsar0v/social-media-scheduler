@@ -255,6 +255,14 @@
 		}
 	}
 
+	function syncStoryCaptionState() {
+		const caption = field('sms-caption');
+		if (!caption) return;
+
+		const isStory = Boolean(field('sms-is-story')?.checked);
+		caption.disabled = isStory;
+	}
+
 	function setReadOnly(readOnly) {
 		isReadOnly = readOnly;
 
@@ -283,6 +291,7 @@
 		document.querySelectorAll('#sms-composer-form .sms-actions button').forEach((button) => {
 			button.hidden = readOnly;
 		});
+		syncStoryCaptionState();
 		renderMediaList();
 	}
 
@@ -364,6 +373,7 @@
 		byId('sms-caption').value = post.caption || '';
 		setAccountSelection(post);
 		byId('sms-is-story').checked = Boolean(post.isStory);
+		syncStoryCaptionState();
 		byId('sms-scheduled-at').value = toDateTimeLocalValue(post.scheduledAt);
 		byId('sms-notes').value = post.notes || '';
 		setMediaItems(Array.isArray(post.media) ? post.media : []);
@@ -511,7 +521,10 @@
 			}
 		});
 
+		byId('sms-is-story')?.addEventListener('change', syncStoryCaptionState);
+
 		setReadOnly(false);
+		syncStoryCaptionState();
 		setMediaPanelVisible(true);
 		updateDeleteButton(null);
 		byId('sms-media-picker')?.addEventListener('click', openMediaPicker);
