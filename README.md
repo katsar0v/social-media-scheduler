@@ -87,7 +87,7 @@ You can also activate it from `Plugins` in the WordPress admin.
 ## First-Time Setup
 
 1. Open `Calendar` in the WordPress admin sidebar.
-2. Go to `Settings` and choose the timezone, default platform, calendar week start, and brand hashtags.
+2. Go to `Settings` and choose the timezone, default platform, and calendar week start.
 3. Add the Meta App ID and Meta App Secret if you publish to Facebook or Instagram.
 4. Add the TikTok Client Key, TikTok Client Secret, and TikTok Redirect URI if you publish to TikTok.
 5. Go to `Accounts` and connect the required Meta and TikTok accounts.

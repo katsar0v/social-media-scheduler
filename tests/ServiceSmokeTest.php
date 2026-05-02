@@ -47,11 +47,10 @@ try {
 		array(
 			'timezone'          => 'Europe/Sofia',
 			'defaultPlatform'   => 'instagram',
-			'brandHashtags'     => ' #service-smoke ',
 			'calendarWeekStart' => 1,
 		)
 	);
-	$assert( '#service-smoke' === $settings['brandHashtags'], 'SettingsService did not trim brandHashtags.' );
+	$assert( 'instagram' === $settings['defaultPlatform'], 'SettingsService did not persist defaultPlatform.' );
 
 	try {
 		$settings_service->update( array( 'timezone' => 'Mars/Olympus' ) );

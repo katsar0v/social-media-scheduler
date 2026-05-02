@@ -39,7 +39,6 @@ final class SettingsRepository {
 		$allowed = array(
 			'timezone',
 			'defaultPlatform',
-			'brandHashtags',
 			'calendarWeekStart',
 			'metaAppId',
 			'metaAppSecret',
@@ -72,7 +71,7 @@ final class SettingsRepository {
 	 */
 	private function normalize( array $settings ): array {
 		$normalized = array_merge( Installer::default_settings(), $settings );
-		unset( $normalized['defaultPostStatus'] );
+		unset( $normalized['defaultPostStatus'], $normalized['brandHashtags'] );
 
 		$normalized['calendarWeekStart'] = (int) $normalized['calendarWeekStart'];
 		$normalized['metaRedirectUri']   = rest_url( 'sms/v1/auth/meta/callback' );

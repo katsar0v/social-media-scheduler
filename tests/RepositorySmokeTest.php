@@ -47,12 +47,12 @@ $created_account_id = null;
 try {
 	$settings = $settings_repository->update(
 		array(
-			'brandHashtags'     => '#phase3-smoke',
 			'defaultPlatform'   => 'facebook',
 			'calendarWeekStart' => 0,
 		)
 	);
-	$assert( '#phase3-smoke' === $settings['brandHashtags'], 'Settings repository did not persist brand hashtags.' );
+	$assert( 'facebook' === $settings['defaultPlatform'], 'Settings repository did not persist default platform.' );
+	$assert( 0 === $settings['calendarWeekStart'], 'Settings repository did not persist calendar week start.' );
 
 	$provider_user_id = 'phase3-' . wp_generate_uuid4();
 	$access_token     = 'access-' . wp_generate_uuid4();

@@ -203,7 +203,6 @@ final class Installer {
 		return array(
 			'timezone'            => 'Europe/Sofia',
 			'defaultPlatform'     => 'instagram',
-			'brandHashtags'       => '',
 			'calendarWeekStart'   => 1,
 			'metaAppId'           => '',
 			'metaAppSecret'       => '',

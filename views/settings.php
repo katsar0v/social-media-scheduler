@@ -56,9 +56,6 @@ $timezones         = array(
 					<option value="tiktok" <?php selected( (string) ( $settings['defaultPlatform'] ?? '' ), 'tiktok' ); ?>><?php esc_html_e( 'TikTok', 'social-media-scheduler' ); ?></option>
 				</select>
 
-				<label for="sms-brand-hashtags"><?php esc_html_e( 'Brand Hashtags', 'social-media-scheduler' ); ?></label>
-				<textarea id="sms-brand-hashtags" name="brandHashtags" rows="3"><?php echo esc_textarea( (string) ( $settings['brandHashtags'] ?? '' ) ); ?></textarea>
-
 				<label for="sms-calendar-week-start"><?php esc_html_e( 'Calendar Week Start', 'social-media-scheduler' ); ?></label>
 				<select id="sms-calendar-week-start" name="calendarWeekStart">
 					<option value="1" <?php selected( (int) ( $settings['calendarWeekStart'] ?? 1 ), 1 ); ?>><?php esc_html_e( 'Monday', 'social-media-scheduler' ); ?></option>

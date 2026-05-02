@@ -97,12 +97,11 @@ try {
 		'/sms/v1/settings',
 		$nonce,
 		array(
-			'brandHashtags'     => '#rest-smoke',
 			'calendarWeekStart' => 1,
 		)
 	);
 	$assert( 200 === $status( $updated_settings ), 'Settings PUT did not return 200.' );
-	$assert( '#rest-smoke' === $data( $updated_settings )['brandHashtags'], 'Settings PUT did not persist brand hashtags.' );
+	$assert( 1 === (int) $data( $updated_settings )['calendarWeekStart'], 'Settings PUT did not persist calendar week start.' );
 
 	$account = $account_repository->upsert(
 		array(

@@ -92,7 +92,7 @@ final class SettingsService {
 			$normalized['defaultPlatform'] = $platform;
 		}
 
-		foreach ( array( 'brandHashtags', 'metaAppId', 'metaAppSecret', 'tiktokClientKey', 'tiktokClientSecret', 'tiktokRedirectUri', 'baseUrl' ) as $key ) {
+		foreach ( array( 'metaAppId', 'metaAppSecret', 'tiktokClientKey', 'tiktokClientSecret', 'tiktokRedirectUri', 'baseUrl' ) as $key ) {
 			if ( array_key_exists( $key, $input ) ) {
 				$normalized[ $key ] = trim( (string) $input[ $key ] );
 			}

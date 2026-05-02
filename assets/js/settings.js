@@ -31,7 +31,6 @@
 		return {
 			timezone: data.get('timezone'),
 			defaultPlatform: data.get('defaultPlatform'),
-			brandHashtags: data.get('brandHashtags'),
 			calendarWeekStart: Number(data.get('calendarWeekStart')),
 			metaAppId: data.get('metaAppId'),
 			metaAppSecret: data.get('metaAppSecret'),
