@@ -124,7 +124,11 @@ final class ExternalPostService {
 	/**
 	 * @return list<array<string,mixed>>
 	 */
-	public function list( ?int $month = null, ?int $year = null ): array {
+	public function list( ?int $month = null, ?int $year = null, ?string $from = null, ?string $to = null ): array {
+		if ( null !== $from && null !== $to ) {
+			return $this->external_post_repository->list_by_range( $from, $to );
+		}
+
 		if ( null !== $month && null !== $year ) {
 			return $this->external_post_repository->list_by_month( $year, $month );
 		}

@@ -47,7 +47,6 @@ try {
 		array(
 			'timezone'          => 'Europe/Sofia',
 			'defaultPlatform'   => 'instagram',
-			'defaultPostStatus' => 'DRAFT',
 			'brandHashtags'     => ' #service-smoke ',
 			'calendarWeekStart' => 1,
 		)

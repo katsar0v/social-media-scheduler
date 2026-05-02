@@ -39,7 +39,6 @@ final class SettingsRepository {
 		$allowed = array(
 			'timezone',
 			'defaultPlatform',
-			'defaultPostStatus',
 			'brandHashtags',
 			'calendarWeekStart',
 			'metaAppId',
@@ -73,10 +72,7 @@ final class SettingsRepository {
 	 */
 	private function normalize( array $settings ): array {
 		$normalized = array_merge( Installer::default_settings(), $settings );
-
-		if ( 'SCHEDULED' === $normalized['defaultPostStatus'] ) {
-			$normalized['defaultPostStatus'] = 'PUBLISHED';
-		}
+		unset( $normalized['defaultPostStatus'] );
 
 		$normalized['calendarWeekStart'] = (int) $normalized['calendarWeekStart'];
 		$normalized['metaRedirectUri']   = rest_url( 'sms/v1/auth/meta/callback' );

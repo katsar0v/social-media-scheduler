@@ -27,6 +27,7 @@ final class RestRouter {
 		$publish        = new PublishController();
 		$external_posts = new ExternalPostsController();
 		$auth           = new AuthController();
+		$api_keys       = new ApiKeyController();
 
 		register_rest_route(
 			self::NAMESPACE,
@@ -239,15 +240,84 @@ final class RestRouter {
 				),
 			)
 		);
+
+		register_rest_route(
+			self::NAMESPACE,
+			'/api-keys',
+			array(
+				array(
+					'methods'             => 'GET',
+					'callback'            => array( $api_keys, 'list_items' ),
+					'permission_callback' => array( self::class, 'permission_callback' ),
+				),
+				array(
+					'methods'             => 'POST',
+					'callback'            => array( $api_keys, 'create_item' ),
+					'permission_callback' => array( self::class, 'permission_callback' ),
+				),
+			)
+		);
+
+		register_rest_route(
+			self::NAMESPACE,
+			'/api-keys/(?P<id>\d+)',
+			array(
+				array(
+					'methods'             => 'GET',
+					'callback'            => array( $api_keys, 'get_item' ),
+					'permission_callback' => array( self::class, 'permission_callback' ),
+				),
+				array(
+					'methods'             => 'PUT,PATCH',
+					'callback'            => array( $api_keys, 'update_item' ),
+					'permission_callback' => array( self::class, 'permission_callback' ),
+				),
+				array(
+					'methods'             => 'DELETE',
+					'callback'            => array( $api_keys, 'delete_item' ),
+					'permission_callback' => array( self::class, 'permission_callback' ),
+				),
+			)
+		);
 	}
 
 	public static function register_admin_post_actions(): void {
 		$auth = new AuthController();
+		$api_keys = new ApiKeyController();
 		add_action( 'admin_post_sms_oauth_meta_init', array( $auth, 'meta_init' ) );
 		add_action( 'admin_post_sms_oauth_tiktok_init', array( $auth, 'tiktok_init' ) );
+		add_action( 'wp_ajax_sms_save_api_key', array( $api_keys, 'ajax_save_api_key' ) );
+		add_action( 'wp_ajax_sms_delete_api_key', array( $api_keys, 'ajax_delete_api_key' ) );
 	}
 
 	public static function permission_callback( WP_REST_Request $request ): true|WP_Error {
+		// First, try API key authentication
+		$api_key_header = $request->get_header( 'X-API-KEY' );
+		if ( ! empty( $api_key_header ) ) {
+			$auth = new ApiKeyAuth();
+			if ( $auth->authenticate( $request ) ) {
+				// API key authenticated, check if it has required permissions based on endpoint
+				$route = $request->get_route();
+				$method = $request->get_method();
+
+				$required_permissions = self::get_required_permissions_for_route( $route, $method );
+				if ( ! $auth->check_permissions( $required_permissions ) ) {
+					return new WP_Error(
+						'sms_api_key_insufficient_permissions',
+						__( 'API key does not have required permissions.', 'social-media-scheduler' ),
+						array( 'status' => 403 )
+					);
+				}
+				return true;
+			}
+			return new WP_Error(
+				'sms_api_key_invalid',
+				__( 'Invalid or inactive API key.', 'social-media-scheduler' ),
+				array( 'status' => 401 )
+			);
+		}
+
+		// Fall back to nonce/capability check
 		$nonce = (string) $request->get_header( 'X-WP-Nonce' );
 		if ( '' === $nonce || ! wp_verify_nonce( $nonce, 'wp_rest' ) ) {
 			return new WP_Error(
@@ -266,5 +336,86 @@ final class RestRouter {
 		}
 
 		return true;
+	}
+
+	/**
+	 * Determine required permissions for a route.
+	 */
+	private static function get_required_permissions_for_route( string $route, string $method ): array {
+		// Posts routes
+		if ( preg_match( '#^/sms/v1/posts$#', $route ) ) {
+			if ( 'GET' === $method ) {
+				return array( \KatsarovDesign\SocialMediaScheduler\Domain\ApiKey::PERMISSION_POSTS_READ );
+			}
+			if ( 'POST' === $method ) {
+				return array( \KatsarovDesign\SocialMediaScheduler\Domain\ApiKey::PERMISSION_POSTS_WRITE );
+			}
+		}
+		if ( preg_match( '#^/sms/v1/posts/\d+$#', $route ) ) {
+			if ( 'GET' === $method ) {
+				return array( \KatsarovDesign\SocialMediaScheduler\Domain\ApiKey::PERMISSION_POSTS_READ );
+			}
+			if ( in_array( $method, array( 'PUT', 'PATCH' ), true ) ) {
+				return array( \KatsarovDesign\SocialMediaScheduler\Domain\ApiKey::PERMISSION_POSTS_WRITE );
+			}
+			if ( 'DELETE' === $method ) {
+				return array( \KatsarovDesign\SocialMediaScheduler\Domain\ApiKey::PERMISSION_POSTS_DELETE );
+			}
+		}
+		if ( preg_match( '#^/sms/v1/posts/\d+/media#', $route ) ) {
+			return array( \KatsarovDesign\SocialMediaScheduler\Domain\ApiKey::PERMISSION_POSTS_WRITE );
+		}
+
+		// Publish routes
+		if ( preg_match( '#^/sms/v1/publish/\d+/results$#', $route ) ) {
+			return array( \KatsarovDesign\SocialMediaScheduler\Domain\ApiKey::PERMISSION_POSTS_READ );
+		}
+
+		if ( preg_match( '#^/sms/v1/publish/#', $route ) ) {
+			if ( strpos( $route, '/meta' ) !== false ) {
+				return array( \KatsarovDesign\SocialMediaScheduler\Domain\ApiKey::PERMISSION_PUBLISH_META );
+			}
+			if ( strpos( $route, '/tiktok' ) !== false ) {
+				return array( \KatsarovDesign\SocialMediaScheduler\Domain\ApiKey::PERMISSION_PUBLISH_TIKTOK );
+			}
+		}
+
+		// Settings routes
+		if ( preg_match( '#^/sms/v1/settings$#', $route ) ) {
+			return array( \KatsarovDesign\SocialMediaScheduler\Domain\ApiKey::PERMISSION_ALL );
+		}
+
+		// Media routes
+		if ( preg_match( '#^/sms/v1/media/#', $route ) ) {
+			return array( \KatsarovDesign\SocialMediaScheduler\Domain\ApiKey::PERMISSION_POSTS_WRITE );
+		}
+
+		// External posts routes
+		if ( preg_match( '#^/sms/v1/external-posts/refresh$#', $route ) ) {
+			return array( \KatsarovDesign\SocialMediaScheduler\Domain\ApiKey::PERMISSION_ACCOUNTS_WRITE );
+		}
+
+		if ( preg_match( '#^/sms/v1/external-posts$#', $route ) ) {
+			return array( \KatsarovDesign\SocialMediaScheduler\Domain\ApiKey::PERMISSION_POSTS_READ );
+		}
+
+		// Auth routes (accounts)
+		if ( preg_match( '#^/sms/v1/auth/#', $route ) ) {
+			if ( 'DELETE' === $method ) {
+				return array( \KatsarovDesign\SocialMediaScheduler\Domain\ApiKey::PERMISSION_ACCOUNTS_WRITE );
+			}
+			return array( \KatsarovDesign\SocialMediaScheduler\Domain\ApiKey::PERMISSION_ACCOUNTS_READ );
+		}
+
+		// API keys routes
+		if ( preg_match( '#^/sms/v1/api-keys#', $route ) ) {
+			if ( 'GET' === $method ) {
+				return array( \KatsarovDesign\SocialMediaScheduler\Domain\ApiKey::PERMISSION_API_KEYS_READ );
+			}
+			return array( \KatsarovDesign\SocialMediaScheduler\Domain\ApiKey::PERMISSION_API_KEYS_WRITE );
+		}
+
+		// Unknown routes require full access instead of silently allowing any valid key.
+		return array( \KatsarovDesign\SocialMediaScheduler\Domain\ApiKey::PERMISSION_ALL );
 	}
 }

@@ -26,19 +26,22 @@ final class PublishService {
 	private PublishResultRepository $publish_result_repository;
 	private MetaPublisher $meta_publisher;
 	private TikTokPublisher $tiktok_publisher;
+	private MediaService $media_service;
 
 	public function __construct(
 		?PostRepository $post_repository = null,
 		?SocialAccountRepository $social_account_repository = null,
 		?PublishResultRepository $publish_result_repository = null,
 		?MetaPublisher $meta_publisher = null,
-		?TikTokPublisher $tiktok_publisher = null
+		?TikTokPublisher $tiktok_publisher = null,
+		?MediaService $media_service = null
 	) {
 		$this->post_repository           = $post_repository ?? new PostRepository();
 		$this->social_account_repository = $social_account_repository ?? new SocialAccountRepository();
 		$this->publish_result_repository = $publish_result_repository ?? new PublishResultRepository();
 		$this->meta_publisher            = $meta_publisher ?? new MetaPublisher();
 		$this->tiktok_publisher          = $tiktok_publisher ?? new TikTokPublisher();
+		$this->media_service             = $media_service ?? new MediaService();
 	}
 
 	/**
@@ -93,6 +96,7 @@ final class PublishService {
 								'publishedAt'    => gmdate( DATE_ATOM ),
 							)
 						);
+						$this->cleanup_post_media_after_publish( $post );
 						$results[] = array( 'platform' => $target, 'platformPostId' => $platform_post_id, 'isScheduled' => false );
 						continue;
 					}
@@ -119,6 +123,7 @@ final class PublishService {
 							)
 						)
 					);
+					$this->cleanup_post_media_after_publish( $post );
 					$results[] = array( 'platform' => $target, 'platformPostId' => $platform_post_id, 'isScheduled' => $is_scheduled );
 					continue;
 				}
@@ -159,6 +164,7 @@ final class PublishService {
 						'publishedAt'    => gmdate( DATE_ATOM ),
 					)
 				);
+				$this->cleanup_post_media_after_publish( $post );
 				$results[] = array( 'platform' => $target, 'platformPostId' => $platform_post_id, 'isScheduled' => false );
 			} catch ( \Throwable $error ) {
 				$error_message = $error->getMessage();
@@ -195,7 +201,7 @@ final class PublishService {
 		$input   = array( 'postId' => (int) $post['id'], 'platform' => 'tiktok' );
 
 		if ( ! empty( $post['scheduledAt'] ) && strtotime( (string) $post['scheduledAt'] ) > time() ) {
-			$this->publish_result_repository->create( array_merge( $input, array( 'status' => 'pending' ) ) );
+			$this->ensure_pending_result( $input );
 			$this->post_repository->update( (int) $post['id'], array( 'status' => 'SCHEDULED' ) );
 
 			return array( 'platform' => 'tiktok', 'platformPostId' => '' );
@@ -348,6 +354,7 @@ final class PublishService {
 					)
 				);
 				$this->post_repository->update( (int) $post['id'], array( 'status' => 'PUBLISHED' ) );
+				$this->cleanup_post_media_after_publish( $post );
 				++$published;
 				continue;
 			}
@@ -397,6 +404,44 @@ final class PublishService {
 		}
 
 		$this->publish_result_repository->create( array_merge( $input, array( 'status' => 'pending' ) ) );
+	}
+
+	/**
+	 * @param array<string,mixed> $post Scheduled post.
+	 */
+	private function cleanup_post_media_after_publish( array $post ): void {
+		$post_id = (int) ( $post['id'] ?? 0 );
+		if ( $post_id <= 0 || empty( $post['media'] ) || ! is_array( $post['media'] ) ) {
+			return;
+		}
+
+		foreach ( $post['media'] as $media ) {
+			if ( ! is_array( $media ) ) {
+				continue;
+			}
+
+			$attachment_id = (int) ( $media['attachmentId'] ?? 0 );
+			if ( $attachment_id <= 0 ) {
+				continue;
+			}
+
+			$this->media_service->detach( $post_id, $attachment_id );
+
+			try {
+				$this->media_service->delete_attachment( $attachment_id );
+			} catch ( MediaNotFoundException ) {
+				continue;
+			} catch ( \Throwable $error ) {
+				error_log(
+					sprintf(
+						'[sms-publish] Failed to delete media attachment %1$d for post %2$d: %3$s',
+						$attachment_id,
+						$post_id,
+						$error->getMessage()
+					)
+				);
+			}
+		}
 	}
 
 	private function has_tracked_scheduled_result( int $post_id, string $platform ): bool {

@@ -17,12 +17,13 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Creates and upgrades plugin storage.
  */
 final class Installer {
-	public const DB_VERSION                 = '1.0.0';
+	public const DB_VERSION                 = '1.1.0';
 	public const OPTION_DB_VERSION          = 'sms_db_version';
 	public const OPTION_SETTINGS            = 'sms_settings';
 	public const OPTION_REMOVE_ON_UNINSTALL = 'sms_remove_on_uninstall';
 
 	private const TABLES = array(
+		'sms_api_key',
 		'sms_post',
 		'sms_post_media',
 		'sms_social_account',
@@ -55,6 +56,7 @@ final class Installer {
 		$account_table   = self::table_name( 'sms_social_account' );
 		$result_table    = self::table_name( 'sms_publish_result' );
 		$external_table  = self::table_name( 'sms_external_post' );
+		$api_key_table   = self::table_name( 'sms_api_key' );
 
 		dbDelta(
 			"CREATE TABLE {$post_table} (
@@ -152,6 +154,36 @@ final class Installer {
 				KEY published_at (published_at)
 			) {$charset_collate};"
 		);
+
+		dbDelta(
+			"CREATE TABLE {$api_key_table} (
+				id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+				name varchar(255) NOT NULL,
+				api_key varchar(191) NOT NULL,
+				status varchar(32) NOT NULL DEFAULT 'active',
+				permissions text NOT NULL,
+				last_used_at datetime DEFAULT NULL,
+				created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+				updated_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+				PRIMARY KEY  (id),
+				UNIQUE KEY api_key (api_key),
+				KEY status (status),
+				KEY created_at (created_at)
+			) {$charset_collate};"
+		);
+	}
+
+	public static function table_name( string $table ): string {
+		global $wpdb;
+
+		return $wpdb->prefix . $table;
+	}
+
+	/**
+	 * Get the full table name for the API keys table.
+	 */
+	public static function api_key_table_name(): string {
+		return self::table_name( 'sms_api_key' );
 	}
 
 	public static function ensure_settings_option(): void {
@@ -171,7 +203,6 @@ final class Installer {
 		return array(
 			'timezone'            => 'Europe/Sofia',
 			'defaultPlatform'     => 'instagram',
-			'defaultPostStatus'   => 'DRAFT',
 			'brandHashtags'       => '',
 			'calendarWeekStart'   => 1,
 			'metaAppId'           => '',
@@ -233,13 +264,8 @@ final class Installer {
 		delete_option( self::OPTION_SETTINGS );
 		delete_option( self::OPTION_DB_VERSION );
 		delete_option( self::OPTION_REMOVE_ON_UNINSTALL );
+		delete_option( 'sms_publish_lock' );
 		delete_transient( 'sms_publish_lock' );
 		delete_transient( 'sms_external_posts_cache' );
-	}
-
-	public static function table_name( string $table ): string {
-		global $wpdb;
-
-		return $wpdb->prefix . $table;
 	}
 }

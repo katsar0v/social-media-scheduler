@@ -10,7 +10,6 @@ declare(strict_types=1);
 namespace KatsarovDesign\SocialMediaScheduler\Service;
 
 use KatsarovDesign\SocialMediaScheduler\Domain\Platform;
-use KatsarovDesign\SocialMediaScheduler\Domain\PostStatus;
 use KatsarovDesign\SocialMediaScheduler\Repository\SettingsRepository;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -91,20 +90,6 @@ final class SettingsService {
 				);
 			}
 			$normalized['defaultPlatform'] = $platform;
-		}
-
-		if ( array_key_exists( 'defaultPostStatus', $input ) ) {
-			$status = trim( (string) $input['defaultPostStatus'] );
-			if ( ! in_array( $status, PostStatus::creatable_values(), true ) ) {
-				throw new SettingsValidationException(
-					sprintf(
-						/* translators: %s: comma-separated list of allowed post statuses. */
-						__( 'Default post status must be one of: %s', 'social-media-scheduler' ),
-						implode( ', ', PostStatus::creatable_values() )
-					)
-				);
-			}
-			$normalized['defaultPostStatus'] = $status;
 		}
 
 		foreach ( array( 'brandHashtags', 'metaAppId', 'metaAppSecret', 'tiktokClientKey', 'tiktokClientSecret', 'tiktokRedirectUri', 'baseUrl' ) as $key ) {

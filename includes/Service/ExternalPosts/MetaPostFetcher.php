@@ -63,7 +63,7 @@ final class MetaPostFetcher {
 			try {
 				$posts = array_merge( $posts, $this->fetch_facebook_stories( (string) $meta['fbPageId'], $token, $account_id ) );
 			} catch ( \Throwable $error ) {
-				error_log( '[external-posts] Could not fetch FB stories: ' . $error->getMessage() );
+				error_log( '[external-posts] Could not fetch FB stories: ' . $this->safe_error_message( $error ) );
 			}
 		}
 
@@ -81,7 +81,7 @@ final class MetaPostFetcher {
 			try {
 				$posts = array_merge( $posts, $this->fetch_instagram_stories( (string) $meta['igBusinessAccountId'], $token, $account_id ) );
 			} catch ( \Throwable $error ) {
-				error_log( '[external-posts] Could not fetch IG stories: ' . $error->getMessage() );
+				error_log( '[external-posts] Could not fetch IG stories: ' . $this->safe_error_message( $error ) );
 			}
 		}
 
@@ -127,7 +127,7 @@ final class MetaPostFetcher {
 			try {
 				$all = array_merge( $all, $this->{$method}( $page_id, $token, $account_id ) );
 			} catch ( \Throwable $error ) {
-				error_log( '[external-posts] Could not fetch FB supplemental posts: ' . $error->getMessage() );
+				error_log( '[external-posts] Could not fetch FB supplemental posts: ' . $this->safe_error_message( $error ) );
 			}
 		}
 
@@ -358,5 +358,12 @@ final class MetaPostFetcher {
 
 	private function graph_url( string $path, array $query = array() ): string {
 		return add_query_arg( $query, 'https://graph.facebook.com/v25.0/' . ltrim( $path, '/' ) );
+	}
+
+	private function safe_error_message( \Throwable $error ): string {
+		$message  = sanitize_text_field( $error->getMessage() );
+		$redacted = preg_replace( '/(access_token|refresh_token|client_secret|authorization|bearer)\s*[:=]\s*[^\s,]+/i', '$1=[redacted]', $message );
+
+		return substr( (string) ( $redacted ?? $message ), 0, 300 );
 	}
 }

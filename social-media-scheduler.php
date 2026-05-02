@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Social Media Scheduler
- * Description: Editorial social media scheduling for Sebeotkrivatel.
+ * Description: Editorial social media scheduling.
  * Version: 0.1.0
  * Requires at least: 6.4
  * Requires PHP: 8.1
@@ -23,7 +23,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 define( 'SMS_PLUGIN_VERSION', '0.1.0' );
-define( 'SMS_DB_VERSION', '1.0.0' );
+define( 'SMS_DB_VERSION', '1.1.0' );
 define( 'SMS_PLUGIN_FILE', __FILE__ );
 define( 'SMS_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'SMS_PLUGIN_URL', plugin_dir_url( __FILE__ ) );

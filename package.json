@@ -3,13 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "wp-env:start": "wp-env start",
-    "wp-env:stop": "wp-env stop",
-    "test:phpunit": "wp-env run tests-cli bash -lc \"cd /var/www/html/wp-content/plugins/social-media-scheduler-by-katsarov-design && vendor/bin/phpunit -c phpunit.xml.dist\"",
-    "i18n:pot": "wp i18n make-pot . languages/social-media-scheduler.pot --exclude=vendor,node_modules",
-    "i18n:json": "wp i18n make-json languages --no-purge"
-  },
-  "devDependencies": {
-    "@wordpress/env": "^10.13.0"
+    "docker:status": "docker ps -a",
+    "test:phpunit": "docker exec -w /var/www/html/wp-content/plugins/social-media-scheduler-by-katsarov-design php vendor/bin/phpunit -c phpunit.xml.dist",
+    "i18n:pot": "docker exec -w /var/www/html/wp-content/plugins/social-media-scheduler-by-katsarov-design php wp i18n make-pot . languages/social-media-scheduler.pot --exclude=vendor,node_modules --allow-root",
+    "i18n:json": "docker exec -w /var/www/html/wp-content/plugins/social-media-scheduler-by-katsarov-design php wp i18n make-json languages --no-purge --allow-root"
   }
 }

@@ -8,11 +8,11 @@ Stable tag: 0.1.0
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Editorial social media scheduling for Sebeotkrivatel.
+Editorial social media scheduling.
 
 == Description ==
 
-Social Media Scheduler adds a WordPress admin calendar for planning and publishing Sebeotkrivatel social posts across Instagram, Facebook, and TikTok.
+Social Media Scheduler adds a WordPress admin calendar for planning and publishing social media posts across Instagram, Facebook, and TikTok.
 
 This initial migration scaffold creates the plugin bootstrap, custom database tables, settings option, cron registration, capability registration, and token encryption foundation.
 

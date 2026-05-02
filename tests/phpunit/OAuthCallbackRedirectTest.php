@@ -209,7 +209,14 @@ final class OAuthCallbackRedirectTest extends SmsTestCase {
 
 		$this->assertIsString( $output );
 		$this->assertStringContainsString( 'notice notice-success', $output );
-		$this->assertStringContainsString( 'Успешно свързахме 2 Meta акаунта.', $output );
+		$this->assertStringContainsString(
+			sprintf(
+				/* translators: %d: number of connected Meta accounts. */
+				__( '%d Meta accounts connected successfully.', 'social-media-scheduler' ),
+				2
+			),
+			$output
+		);
 	}
 
 	/**

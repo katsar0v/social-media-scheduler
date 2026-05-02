@@ -13,17 +13,29 @@ $settings = isset( $settings ) && is_array( $settings ) ? $settings : array();
 <div class="wrap sms-app sms-app--composer">
 	<header class="sms-page-header">
 		<div>
-			<p class="sms-eyebrow"><?php esc_html_e( 'Create post', 'social-media-scheduler' ); ?></p>
-			<h1 class="wp-heading-inline"><?php esc_html_e( 'New Post', 'social-media-scheduler' ); ?></h1>
+			<p class="sms-eyebrow" id="sms-composer-eyebrow"><?php esc_html_e( 'Create post', 'social-media-scheduler' ); ?></p>
+			<h1 class="wp-heading-inline" id="sms-composer-title"><?php esc_html_e( 'New Post', 'social-media-scheduler' ); ?></h1>
 		</div>
-		<a class="button" href="<?php echo esc_url( admin_url( 'admin.php?page=sms-calendar' ) ); ?>">
-			<span class="dashicons dashicons-calendar-alt" aria-hidden="true"></span>
-			<?php esc_html_e( 'Calendar', 'social-media-scheduler' ); ?>
-		</a>
+		<div class="sms-actions sms-page-header__actions">
+			<button class="button button-link-delete" id="sms-delete-post" type="button" hidden>
+				<span class="dashicons dashicons-trash" aria-hidden="true"></span>
+				<?php esc_html_e( 'Delete post', 'social-media-scheduler' ); ?>
+			</button>
+			<a class="button" href="<?php echo esc_url( admin_url( 'admin.php?page=sms-calendar' ) ); ?>">
+				<span class="dashicons dashicons-calendar-alt" aria-hidden="true"></span>
+				<?php esc_html_e( 'Calendar', 'social-media-scheduler' ); ?>
+			</a>
+		</div>
 	</header>
 
+	<section class="sms-panel sms-composer-state" id="sms-post-status-card" hidden>
+		<h2 id="sms-post-status-title"></h2>
+		<p id="sms-post-status-message"></p>
+		<ul class="sms-error-list" id="sms-post-errors" hidden></ul>
+	</section>
+
 	<form class="sms-form sms-composer-form" id="sms-composer-form">
-		<div class="sms-form-grid">
+		<div class="sms-form-grid" id="sms-composer-form-grid">
 			<section class="sms-panel">
 				<h2><?php esc_html_e( 'Content', 'social-media-scheduler' ); ?></h2>
 				<label for="sms-caption"><?php esc_html_e( 'Caption', 'social-media-scheduler' ); ?></label>
@@ -52,28 +64,19 @@ $settings = isset( $settings ) && is_array( $settings ) ? $settings : array();
 				</select>
 				<input type="hidden" id="sms-platform" name="platform" value="<?php echo esc_attr( (string) ( $settings['defaultPlatform'] ?? 'instagram' ) ); ?>" />
 
-				<label class="sms-checkbox" for="sms-is-story">
-					<input type="checkbox" id="sms-is-story" name="isStory" />
-					<span><?php esc_html_e( 'Story post', 'social-media-scheduler' ); ?></span>
-				</label>
+					<label class="sms-checkbox" for="sms-is-story">
+						<input type="checkbox" id="sms-is-story" name="isStory" />
+						<span><?php esc_html_e( 'Story post', 'social-media-scheduler' ); ?></span>
+					</label>
 
-				<label for="sms-scheduled-at"><?php esc_html_e( 'Date and time', 'social-media-scheduler' ); ?></label>
-				<input id="sms-scheduled-at" name="scheduledAt" type="datetime-local" />
+					<label for="sms-scheduled-at"><?php esc_html_e( 'Date and time', 'social-media-scheduler' ); ?></label>
+					<input id="sms-scheduled-at" name="scheduledAt" type="datetime-local" />
 
-				<label for="sms-status"><?php esc_html_e( 'Status', 'social-media-scheduler' ); ?></label>
-				<select id="sms-status" name="status">
-					<option value="DRAFT"><?php esc_html_e( 'Draft', 'social-media-scheduler' ); ?></option>
-					<option value="IN_REVIEW"><?php esc_html_e( 'In review', 'social-media-scheduler' ); ?></option>
-					<option value="APPROVED"><?php esc_html_e( 'Approved', 'social-media-scheduler' ); ?></option>
-					<option value="PUBLISHED"><?php esc_html_e( 'Publish or schedule', 'social-media-scheduler' ); ?></option>
-					<option value="CANCELLED"><?php esc_html_e( 'Cancelled', 'social-media-scheduler' ); ?></option>
-				</select>
+					<label for="sms-notes"><?php esc_html_e( 'Notes', 'social-media-scheduler' ); ?></label>
+					<textarea id="sms-notes" name="notes" rows="4"></textarea>
+				</section>
 
-				<label for="sms-notes"><?php esc_html_e( 'Notes', 'social-media-scheduler' ); ?></label>
-				<textarea id="sms-notes" name="notes" rows="4"></textarea>
-			</section>
-
-			<aside class="sms-panel sms-panel--side">
+			<aside class="sms-panel sms-panel--side" id="sms-media-panel">
 				<h2><?php esc_html_e( 'Media', 'social-media-scheduler' ); ?></h2>
 				<button class="button" id="sms-media-picker" type="button">
 					<span class="dashicons dashicons-format-gallery" aria-hidden="true"></span>
@@ -83,16 +86,24 @@ $settings = isset( $settings ) && is_array( $settings ) ? $settings : array();
 			</aside>
 		</div>
 
-		<div class="sms-actions">
-			<button class="button button-primary" type="submit">
-				<span class="dashicons dashicons-saved" aria-hidden="true"></span>
-				<?php esc_html_e( 'Save', 'social-media-scheduler' ); ?>
-			</button>
-			<button class="button" id="sms-publish-now" type="button">
-				<span class="dashicons dashicons-megaphone" aria-hidden="true"></span>
-				<?php esc_html_e( 'Publish Now', 'social-media-scheduler' ); ?>
-			</button>
-			<span class="sms-inline-status" id="sms-composer-status" aria-live="polite"></span>
+			<div class="sms-actions">
+				<button class="button button-primary" type="submit">
+					<span class="dashicons dashicons-saved" aria-hidden="true"></span>
+					<?php esc_html_e( 'Keep as Draft', 'social-media-scheduler' ); ?>
+				</button>
+				<button class="button" id="sms-schedule-post" type="button">
+					<span class="dashicons dashicons-calendar-alt" aria-hidden="true"></span>
+					<?php esc_html_e( 'Schedule', 'social-media-scheduler' ); ?>
+				</button>
+				<button class="button" id="sms-publish-now" type="button">
+					<span class="dashicons dashicons-megaphone" aria-hidden="true"></span>
+					<?php esc_html_e( 'Publish Now', 'social-media-scheduler' ); ?>
+				</button>
+				<a class="button" id="sms-view-post" href="#" target="_blank" rel="noopener noreferrer" hidden>
+					<span class="dashicons dashicons-external" aria-hidden="true"></span>
+					<?php esc_html_e( 'View post', 'social-media-scheduler' ); ?>
+				</a>
+				<span class="sms-inline-status" id="sms-composer-status" aria-live="polite"></span>
 		</div>
 	</form>
 </div>

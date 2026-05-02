@@ -55,7 +55,7 @@ final class CronHandlersTest extends SmsTestCase {
 	}
 
 	public function test_publish_tick_lock_skips_overlapping_runs(): void {
-		set_transient( 'sms_publish_lock', 1, 90 );
+		update_option( 'sms_publish_lock', (string) time(), false );
 
 		$result = CronHandlers::handle_publish_tick();
 

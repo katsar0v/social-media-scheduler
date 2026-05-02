@@ -13,7 +13,7 @@ if ( ! $tests_dir ) {
 }
 
 if ( ! is_readable( $tests_dir . '/includes/functions.php' ) ) {
-	fwrite( STDERR, "Could not find WordPress test suite. Set WP_TESTS_DIR or run these tests through wp-env.\n" );
+	fwrite( STDERR, "Could not find WordPress test suite. Set WP_TESTS_DIR or run these tests through your local Docker environment.\n" );
 	exit( 1 );
 }
 

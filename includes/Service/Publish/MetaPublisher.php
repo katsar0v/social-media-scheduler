@@ -538,11 +538,11 @@ final class MetaPublisher {
 	 * @param array<string,mixed> $media Media item.
 	 */
 	private function resolve_instagram_image_url( array $media ): string {
-		if ( ! $this->is_jpeg_media( $media ) ) {
+		if ( ! $this->is_supported_instagram_image( $media ) ) {
 			throw new PublishError(
 				sprintf(
 					/* translators: %s: media filename. */
-					__( 'Instagram image posts require JPEG media. "%s" must be converted to JPG before publishing.', 'social-media-scheduler' ),
+					__( 'Instagram image posts require JPEG or PNG media. "%s" is not supported.', 'social-media-scheduler' ),
 					(string) ( $media['filename'] ?? '' )
 				),
 				400
@@ -555,12 +555,15 @@ final class MetaPublisher {
 	/**
 	 * @param array<string,mixed> $media Media item.
 	 */
-	private function is_jpeg_media( array $media ): bool {
+	private function is_supported_instagram_image( array $media ): bool {
 		$mime = (string) ( $media['mimeType'] ?? '' );
 		$name = (string) ( $media['filename'] ?? '' );
 		$url  = (string) ( $media['url'] ?? '' );
 
-		return 'image/jpeg' === $mime || (bool) preg_match( '/\.jpe?g(?:$|\?)/i', $name ) || (bool) preg_match( '/\.jpe?g(?:$|\?)/i', $url );
+		$is_jpeg = 'image/jpeg' === $mime || (bool) preg_match( '/\.jpe?g(?:$|\?)/i', $name ) || (bool) preg_match( '/\.jpe?g(?:$|\?)/i', $url );
+		$is_png  = 'image/png' === $mime || (bool) preg_match( '/\.png(?:$|\?)/i', $name ) || (bool) preg_match( '/\.png(?:$|\?)/i', $url );
+
+		return $is_jpeg || $is_png;
 	}
 
 	/**

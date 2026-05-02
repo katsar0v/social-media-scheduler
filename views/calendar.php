@@ -6,18 +6,26 @@
  */
 
 declare(strict_types=1);
+
+$notice = isset( $notice ) && is_array( $notice ) ? $notice : null;
 ?>
 <div class="wrap sms-app sms-app--calendar">
 	<header class="sms-page-header">
 		<div>
 			<p class="sms-eyebrow"><?php esc_html_e( 'Editorial calendar', 'social-media-scheduler' ); ?></p>
-			<h1 class="wp-heading-inline"><?php esc_html_e( 'Social Scheduler', 'social-media-scheduler' ); ?></h1>
+			<h1 class="wp-heading-inline"><?php esc_html_e( 'Calendar', 'social-media-scheduler' ); ?></h1>
 		</div>
 		<a class="button button-primary" href="<?php echo esc_url( admin_url( 'admin.php?page=sms-new-post' ) ); ?>">
 			<span class="dashicons dashicons-plus-alt2" aria-hidden="true"></span>
 			<?php esc_html_e( 'New Post', 'social-media-scheduler' ); ?>
 		</a>
 	</header>
+
+	<?php if ( null !== $notice && ! empty( $notice['message'] ) ) : ?>
+		<div class="notice notice-<?php echo esc_attr( 'success' === $notice['type'] ? 'success' : 'error' ); ?> is-dismissible">
+			<p><?php echo esc_html( (string) $notice['message'] ); ?></p>
+		</div>
+	<?php endif; ?>
 
 	<section class="sms-toolbar" aria-label="<?php esc_attr_e( 'Calendar controls', 'social-media-scheduler' ); ?>">
 		<div class="sms-toolbar__group">

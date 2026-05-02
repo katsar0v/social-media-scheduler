@@ -10,9 +10,6 @@
 .phpunit.result.cache
 wp-cli.local.yml
 
-# WordPress development environment
-.wp-env/
-
 # Translations
 /languages/*.json
 /languages/*.pot.bak
@@ -31,6 +28,7 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.bak
+.codex
 
 # Kilocode
 .kilo/

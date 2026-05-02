@@ -58,6 +58,23 @@ final class RestPostsCrudTest extends SmsTestCase {
 
 		$delete = $this->rest_request( 'DELETE', '/sms/v1/posts/' . (int) $created['id'], array(), $nonce );
 		$this->assertSame( 204, $this->response_status( $delete ) );
+
+		$draft = $this->rest_request(
+			'POST',
+			'/sms/v1/posts',
+			array(
+				'title'           => 'REST Draft Post',
+				'caption'         => 'Draft caption',
+				'platform'        => 'instagram',
+				'socialAccountId' => $this->account_id,
+				'status'          => 'DRAFT',
+			),
+			$nonce
+		);
+		$this->assertSame( 201, $this->response_status( $draft ) );
+
+		$delete_draft = $this->rest_request( 'DELETE', '/sms/v1/posts/' . (int) $draft->get_data()['id'], array(), $nonce );
+		$this->assertSame( 400, $this->response_status( $delete_draft ) );
 	}
 
 	/**

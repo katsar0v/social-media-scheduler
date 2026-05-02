@@ -56,13 +56,6 @@ $timezones         = array(
 					<option value="tiktok" <?php selected( (string) ( $settings['defaultPlatform'] ?? '' ), 'tiktok' ); ?>><?php esc_html_e( 'TikTok', 'social-media-scheduler' ); ?></option>
 				</select>
 
-				<label for="sms-default-status"><?php esc_html_e( 'Default Status', 'social-media-scheduler' ); ?></label>
-				<select id="sms-default-status" name="defaultPostStatus">
-					<option value="DRAFT" <?php selected( (string) ( $settings['defaultPostStatus'] ?? '' ), 'DRAFT' ); ?>><?php esc_html_e( 'Draft', 'social-media-scheduler' ); ?></option>
-					<option value="IN_REVIEW" <?php selected( (string) ( $settings['defaultPostStatus'] ?? '' ), 'IN_REVIEW' ); ?>><?php esc_html_e( 'In review', 'social-media-scheduler' ); ?></option>
-					<option value="APPROVED" <?php selected( (string) ( $settings['defaultPostStatus'] ?? '' ), 'APPROVED' ); ?>><?php esc_html_e( 'Approved', 'social-media-scheduler' ); ?></option>
-				</select>
-
 				<label for="sms-brand-hashtags"><?php esc_html_e( 'Brand Hashtags', 'social-media-scheduler' ); ?></label>
 				<textarea id="sms-brand-hashtags" name="brandHashtags" rows="3"><?php echo esc_textarea( (string) ( $settings['brandHashtags'] ?? '' ) ); ?></textarea>
 
@@ -111,4 +104,6 @@ $timezones         = array(
 			<span class="sms-inline-status" id="sms-settings-status" aria-live="polite"></span>
 		</div>
 	</form>
+
+	<?php require SMS_PLUGIN_DIR . 'views/api-keys-list.php'; ?>
 </div>

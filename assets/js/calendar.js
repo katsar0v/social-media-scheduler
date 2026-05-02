@@ -112,9 +112,9 @@
 	}
 
 	async function loadExternalPosts() {
-		const month = visibleMonth.getMonth() + 1;
-		const year = visibleMonth.getFullYear();
-		externalPosts = await request(`external-posts?month=${month}&year=${year}`);
+		const range = monthRange();
+		const params = new URLSearchParams({ from: range.from, to: range.to });
+		externalPosts = await request(`external-posts?${params.toString()}`);
 	}
 
 	async function refreshExternalPostsInBackground() {
@@ -260,6 +260,7 @@
 
 	function buildItemLabel(parts, summary) {
 		const label = parts.filter(Boolean).join(', ');
+		/* translators: 1: calendar item metadata, 2: post summary. */
 		return summary ? sprintf(__('%1$s: %2$s', 'social-media-scheduler'), label, summary) : label;
 	}
 
@@ -275,7 +276,11 @@
 		badge.className = 'sms-calendar-item__platform-badge';
 		badge.innerHTML = story ? storyIcon : platformIcons[platform] || fallbackIcon;
 		badge.title = story
-			? sprintf(__('%s story', 'social-media-scheduler'), platformLabel(platform))
+			? sprintf(
+				/* translators: %s: social platform label. */
+				__('%s story', 'social-media-scheduler'),
+				platformLabel(platform)
+			)
 			: platformLabel(platform);
 		badge.setAttribute('aria-hidden', 'true');
 		return badge;
@@ -343,7 +348,7 @@
 	function render() {
 		if (!grid || !labelText) return;
 
-		labelText.textContent = new Intl.DateTimeFormat(undefined, { month: 'long', year: 'numeric' }).format(visibleMonth);
+		labelText.textContent = config.monthNames[visibleMonth.getMonth()] + ' ' + visibleMonth.getFullYear();
 		grid.replaceChildren();
 
 		const weekdayNames = weekStart === 1

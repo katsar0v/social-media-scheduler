@@ -54,7 +54,7 @@ final class TokenRefreshService {
 						(string) $account['platform'],
 						(string) $account['accountName'],
 						(int) $account['id'],
-						$error->getMessage()
+						$this->safe_error_message( $error )
 					)
 				);
 			}
@@ -142,5 +142,12 @@ final class TokenRefreshService {
 				'tokenExpiresAt' => ! empty( $data['expires_in'] ) ? gmdate( DATE_ATOM, time() + (int) $data['expires_in'] ) : null,
 			)
 		);
+	}
+
+	private function safe_error_message( \Throwable $error ): string {
+		$message  = sanitize_text_field( $error->getMessage() );
+		$redacted = preg_replace( '/(access_token|refresh_token|client_secret|authorization|bearer)\s*[:=]\s*[^\s,]+/i', '$1=[redacted]', $message );
+
+		return substr( (string) ( $redacted ?? $message ), 0, 300 );
 	}
 }

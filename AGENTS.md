@@ -5,11 +5,11 @@ A WordPress plugin for scheduling and publishing posts to social media platforms
 Uses a modern PHP architecture with PSR-4 autoloading, strict types, and repository/service patterns.
 
 ## Developer Commands
-- **Environment**: `npm run wp-env:start` (Starts a local WP instance at http://localhost:8889).
-- **Testing**: `npm run test:phpunit` (Runs PHPUnit tests within the `wp-env` container).
-- **Linting**: `composer lint:phpcs` (Checks WordPress coding standards).
-- **Syntax**: `composer lint:syntax` (Quick PHP syntax check).
-- **Translations**: `npm run i18n:pot` followed by `npm run i18n:json` to generate translation files.
+- **Container status**: `docker ps -a` (Use this first to confirm local containers are up).
+- **Testing**: `docker exec -w /var/www/html/wp-content/plugins/social-media-scheduler-by-katsarov-design php vendor/bin/phpunit -c phpunit.xml.dist` (Runs PHPUnit in the `php` container).
+- **Linting**: `docker exec -w /var/www/html/wp-content/plugins/social-media-scheduler-by-katsarov-design php composer lint:phpcs` (Checks WordPress coding standards in the `php` container).
+- **Syntax**: `docker exec -w /var/www/html/wp-content/plugins/social-media-scheduler-by-katsarov-design php composer lint:syntax` (Runs quick PHP syntax checks in the `php` container).
+- **Translations**: `docker exec -w /var/www/html/wp-content/plugins/social-media-scheduler-by-katsarov-design php wp i18n make-pot . languages/social-media-scheduler.pot --exclude=vendor,node_modules --allow-root` followed by `docker exec -w /var/www/html/wp-content/plugins/social-media-scheduler-by-katsarov-design php wp i18n make-json languages --no-purge --allow-root`.
 
 ## Architecture & Conventions
 - **Autoloading**: PSR-4 `KatsarovDesign\SocialMediaScheduler\` maps to `./includes/`.
@@ -25,12 +25,13 @@ Uses a modern PHP architecture with PSR-4 autoloading, strict types, and reposit
 - **Strict Types**: Always use `declare(strict_types=1);` in new PHP files.
 
 ## Testing Quirks
-- **Framework**: Uses `WP_UnitTestCase` via `wp-env`.
+- **Framework**: Uses `WP_UnitTestCase` in the local Docker-based WordPress test setup.
 - **Base Case**: Extend `SmsTestCase` for tests requiring database interaction; it handles table truncation between tests.
 - **Mocking**: Platform APIs (Meta/TikTok) should be mocked in services or use repository-level tests.
 
 ## Environment Gotchas
-- The plugin uses `./.wp-env.json` to configure the development environment.
+- The plugin runs in a local Docker Compose setup.
+- Use `docker ps -a` to verify container names before running Docker exec commands.
 - **Autoloader**: Run `composer dump-autoload` if classes are not found.
 - **Cron**: Recommends `DISABLE_WP_CRON` in production with a system cron job to ensure timely publishing. An admin notice appears if WP-Cron is disabled but the notice isn't suppressed.
 - **Database**: Custom tables are prefixed with `$wpdb->prefix`. Use `Installer::table_name('table_name')` to get the full name.

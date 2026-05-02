@@ -20,6 +20,7 @@ abstract class SmsTestCase extends WP_UnitTestCase {
 
 	public function tear_down(): void {
 		$this->clear_sms_data();
+		delete_option( 'sms_publish_lock' );
 		delete_transient( 'sms_publish_lock' );
 		parent::tear_down();
 	}
@@ -27,7 +28,7 @@ abstract class SmsTestCase extends WP_UnitTestCase {
 	protected function clear_sms_data(): void {
 		global $wpdb;
 
-		foreach ( array( 'sms_post_media', 'sms_publish_result', 'sms_external_post', 'sms_post', 'sms_social_account' ) as $table ) {
+		foreach ( array( 'sms_post_media', 'sms_publish_result', 'sms_external_post', 'sms_post', 'sms_social_account', 'sms_api_key' ) as $table ) {
 			$wpdb->query( 'TRUNCATE TABLE ' . Installer::table_name( $table ) ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
 		}
 	}

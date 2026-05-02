@@ -30,11 +30,11 @@ final class PostService {
 		'video/webm',
 	);
 
-	private const INSTAGRAM_IMAGE_MIME_TYPES = array( 'image/jpeg' );
+	private const INSTAGRAM_IMAGE_MIME_TYPES = array( 'image/jpeg', 'image/png' );
 
 	private PostRepository $repository;
 	private PostMediaRepository $media_repository;
-	private ?SocialAccountRepository $social_account_repository;
+	private SocialAccountRepository $social_account_repository;
 
 	public function __construct(
 		?PostRepository $repository = null,
@@ -42,7 +42,7 @@ final class PostService {
 		?PostMediaRepository $media_repository = null
 	) {
 		$this->repository                = $repository ?? new PostRepository();
-		$this->social_account_repository = $social_account_repository;
+		$this->social_account_repository = $social_account_repository ?? new SocialAccountRepository();
 		$this->media_repository          = $media_repository ?? new PostMediaRepository();
 	}
 
@@ -99,7 +99,12 @@ final class PostService {
 	}
 
 	public function delete( int $id ): void {
-		$this->find_by_id( $id );
+		$post = $this->find_by_id( $id );
+
+		if ( ! in_array( (string) $post['status'], array( PostStatus::SCHEDULED->value, PostStatus::FAILED->value ), true ) ) {
+			throw new PostValidationException( __( 'Only scheduled or failed posts can be deleted.', 'social-media-scheduler' ) );
+		}
+
 		$this->repository->delete( $id );
 	}
 
@@ -202,7 +207,7 @@ final class PostService {
 		$social_account_id = (int) ( $input['socialAccountId'] ?? 0 );
 		$this->assert_social_account( $social_account_id );
 
-		$scheduled_at = $this->normalize_date( $input['scheduledAt'] ?? null, __( 'Scheduled date must be a valid ISO 8601 date string.', 'social-media-scheduler' ) );
+		$scheduled_at = $this->normalize_date( $input['scheduledAt'] ?? null, __( 'Scheduled date must be a valid ISO 8601 date string.', 'social-media-scheduler' ), false );
 		$status       = $this->normalize_creatable_status( $input['status'] ?? null ) ?? PostStatus::DRAFT->value;
 
 		return array(
@@ -211,7 +216,7 @@ final class PostService {
 			'platform'        => $platform,
 			'socialAccountId' => $social_account_id,
 			'scheduledAt'     => $scheduled_at,
-			'status'          => $this->resolve_status( $scheduled_at, $status ),
+			'status'          => $this->resolve_status( (string) $scheduled_at, $status ),
 			'isStory'         => $is_story,
 			'notes'           => $notes,
 		);
@@ -263,7 +268,7 @@ final class PostService {
 		}
 
 		if ( array_key_exists( 'scheduledAt', $input ) ) {
-			$normalized['scheduledAt'] = $this->normalize_date( $input['scheduledAt'], __( 'Scheduled date must be a valid ISO 8601 date string.', 'social-media-scheduler' ) );
+			$normalized['scheduledAt'] = $this->normalize_date( $input['scheduledAt'], __( 'Scheduled date must be a valid ISO 8601 date string.', 'social-media-scheduler' ), false );
 		}
 
 		$status_changed   = array_key_exists( 'status', $input );
@@ -272,7 +277,7 @@ final class PostService {
 			$requested_status = $status_changed
 				? ( $this->normalize_creatable_status( $input['status'] ?? null ) ?? PostStatus::DRAFT->value )
 				: $this->requested_status_from_existing_post( $existing );
-			$target_status = $this->resolve_status( $normalized['scheduledAt'] ?? (string) $existing['scheduledAt'], $requested_status );
+			$target_status = $this->resolve_status( (string) ( $normalized['scheduledAt'] ?? $existing['scheduledAt'] ), $requested_status );
 			if ( ! PostStatus::can_transition( (string) $existing['status'], $target_status ) ) {
 				throw new PostValidationException(
 					sprintf(
@@ -387,14 +392,18 @@ final class PostService {
 			throw new PostValidationException( __( 'Social account ID must be a positive integer.', 'social-media-scheduler' ) );
 		}
 
-		if ( null !== $this->social_account_repository && null === $this->social_account_repository->find_by_id( $social_account_id ) ) {
+		if ( null === $this->social_account_repository->find_by_id( $social_account_id ) ) {
 			throw new PostValidationException( __( 'Social account ID must reference a connected account.', 'social-media-scheduler' ) );
 		}
 	}
 
-	private function normalize_date( mixed $value, string $message ): string {
+	private function normalize_date( mixed $value, string $message, bool $required = true ): ?string {
 		if ( empty( $value ) || ! is_scalar( $value ) ) {
-			throw new PostValidationException( $message );
+			if ( $required ) {
+				throw new PostValidationException( $message );
+			}
+
+			return null;
 		}
 
 		try {
@@ -453,7 +462,7 @@ final class PostService {
 			&& 'image' === (string) $media['type']
 			&& ! in_array( (string) $media['mimeType'], self::INSTAGRAM_IMAGE_MIME_TYPES, true )
 		) {
-			throw new PostValidationException( __( 'Instagram image posts require JPEG media. Convert unsupported image formats to JPG before uploading.', 'social-media-scheduler' ) );
+			throw new PostValidationException( __( 'Instagram image posts require JPEG or PNG media.', 'social-media-scheduler' ) );
 		}
 	}
 

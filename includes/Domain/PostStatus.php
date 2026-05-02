@@ -26,10 +26,7 @@ enum PostStatus: string {
 	 * @return list<string>
 	 */
 	public static function values(): array {
-		return array_map(
-			static fn ( self $status ): string => $status->value,
-			self::cases()
-		);
+		return array_map( fn( $case ) => $case->value, self::cases() );
 	}
 
 	/**
@@ -67,21 +64,20 @@ enum PostStatus: string {
 	}
 
 	public static function is_valid( string $status ): bool {
-		return null !== self::tryFrom( $status );
+		return self::tryFrom( $status ) !== null;
 	}
 
-	public static function can_transition( self|string $from, self|string $to ): bool {
-		$from_status = $from instanceof self ? $from : self::tryFrom( $from );
-		$to_status   = $to instanceof self ? $to : self::tryFrom( $to );
-
-		if ( null === $from_status || null === $to_status ) {
+	public static function can_transition( string $from, string $to ): bool {
+		$fromEnum = self::tryFrom( $from );
+		$toEnum = self::tryFrom( $to );
+		if ( null === $fromEnum || null === $toEnum ) {
 			return false;
 		}
 
-		return in_array( $to_status->value, self::transition_values()[ $from_status->value ], true );
+		return in_array( $to, self::transition_values()[ $from ], true );
 	}
 
-	public static function canTransition( self|string $from, self|string $to ): bool {
+	public static function canTransition( string $from, string $to ): bool {
 		return self::can_transition( $from, $to );
 	}
 

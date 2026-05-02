@@ -22,10 +22,7 @@ enum Platform: string {
 	 * @return list<string>
 	 */
 	public static function values(): array {
-		return array_map(
-			static fn ( self $platform ): string => $platform->value,
-			self::cases()
-		);
+		return array_map( fn( $case ) => $case->value, self::cases() );
 	}
 
 	/**
@@ -57,26 +54,22 @@ enum Platform: string {
 	}
 
 	public static function is_valid( string $platform ): bool {
-		return null !== self::tryFrom( $platform );
+		return self::tryFrom( $platform ) !== null;
 	}
 
-	public static function is_video_only( self|string $platform ): bool {
-		$value = $platform instanceof self ? $platform->value : $platform;
-
-		return in_array( $value, self::video_only_values(), true );
+	public static function is_video_only( string $platform ): bool {
+		return self::tryFrom( $platform ) !== null && in_array( $platform, self::video_only_values(), true );
 	}
 
-	public static function isVideoOnly( self|string $platform ): bool {
+	public static function isVideoOnly( string $platform ): bool {
 		return self::is_video_only( $platform );
 	}
 
-	public static function supports_stories( self|string $platform ): bool {
-		$value = $platform instanceof self ? $platform->value : $platform;
-
-		return in_array( $value, self::story_values(), true );
+	public static function supports_stories( string $platform ): bool {
+		return self::tryFrom( $platform ) !== null && in_array( $platform, self::story_values(), true );
 	}
 
-	public static function supportsStories( self|string $platform ): bool {
+	public static function supportsStories( string $platform ): bool {
 		return self::supports_stories( $platform );
 	}
 }

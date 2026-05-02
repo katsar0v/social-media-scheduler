@@ -28,8 +28,17 @@ final class ExternalPostsController extends Controller {
 		try {
 			$month = $request->get_param( 'month' );
 			$year  = $request->get_param( 'year' );
+			$from  = $request->get_param( 'from' );
+			$to    = $request->get_param( 'to' );
 
-			return $this->response( $this->service->list( null === $month ? null : (int) $month, null === $year ? null : (int) $year ) );
+			return $this->response(
+				$this->service->list(
+					null === $month ? null : (int) $month,
+					null === $year ? null : (int) $year,
+					null === $from ? null : (string) $from,
+					null === $to ? null : (string) $to,
+				)
+			);
 		} catch ( \Throwable $error ) {
 			return $this->error_response( $error );
 		}

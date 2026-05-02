@@ -11,6 +11,7 @@ namespace KatsarovDesign\SocialMediaScheduler\Admin;
 
 use KatsarovDesign\SocialMediaScheduler\Plugin;
 use KatsarovDesign\SocialMediaScheduler\Repository\SocialAccountRepository;
+use KatsarovDesign\SocialMediaScheduler\Service\ApiKeyService;
 use KatsarovDesign\SocialMediaScheduler\Service\MetaOAuthService;
 use KatsarovDesign\SocialMediaScheduler\Service\SettingsService;
 use KatsarovDesign\SocialMediaScheduler\Service\TikTokOAuthService;
@@ -35,7 +36,7 @@ final class AdminMenu {
 	public static function register(): void {
 		add_menu_page(
 			__( 'Social Scheduler', 'social-media-scheduler' ),
-			__( 'Social Scheduler', 'social-media-scheduler' ),
+			__( 'Calendar', 'social-media-scheduler' ),
 			Plugin::CAPABILITY,
 			self::PAGE_CALENDAR,
 			array( self::class, 'render_calendar' ),
@@ -56,7 +57,12 @@ final class AdminMenu {
 	}
 
 	public static function render_calendar(): void {
-		self::render( 'calendar.php', array() );
+		self::render(
+			'calendar.php',
+			array(
+				'notice' => self::get_notice(),
+			)
+		);
 	}
 
 	public static function render_composer(): void {
@@ -90,9 +96,43 @@ final class AdminMenu {
 	public static function render_settings(): void {
 		self::render(
 			'settings.php',
-			array(
-				'settings' => ( new SettingsService() )->get(),
+			array_merge(
+				array(
+					'settings' => ( new SettingsService() )->get(),
+				),
+				self::api_key_view_vars()
 			)
+		);
+	}
+
+	/**
+	 * @return array<string,mixed>
+	 */
+	private static function api_key_view_vars(): array {
+		$service  = new ApiKeyService();
+		$page     = isset( $_GET['page_num'] ) ? max( 1, absint( wp_unslash( $_GET['page_num'] ) ) ) : 1; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$per_page = 20;
+		$status   = isset( $_GET['status'] ) ? sanitize_key( wp_unslash( $_GET['status'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+
+		$result = $service->list_keys(
+			array_filter(
+				array(
+					'status'   => $status ?: null,
+					'page'     => $page,
+					'per_page' => $per_page,
+				)
+			)
+		);
+
+		return array(
+			'api_keys'          => $result['items'],
+			'total_items'       => $result['total'],
+			'current_page'      => $page,
+			'per_page'          => $per_page,
+			'status_filter'     => $status,
+			'valid_statuses'    => $service->get_valid_statuses(),
+			'permission_groups' => $service->get_permission_groups(),
+			'nonce'             => wp_create_nonce( 'sms_api_key_action' ),
 		);
 	}
 
@@ -107,6 +147,48 @@ final class AdminMenu {
 
 		extract( $vars, EXTR_SKIP ); // phpcs:ignore WordPress.PHP.DontExtract.extract_extract
 		require $path;
+	}
+
+	/**
+	 * @return array{type:string,message:string}|null
+	 */
+	private static function get_notice(): ?array {
+		$notice = isset( $_GET['sms_notice'] ) ? sanitize_key( wp_unslash( $_GET['sms_notice'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		if ( '' === $notice ) {
+			return null;
+		}
+
+		if ( 'published' === $notice ) {
+			return array(
+				'type'    => 'success',
+				'message' => __( 'Post has been published successfully.', 'social-media-scheduler' ),
+			);
+		}
+
+		if ( 'scheduled' === $notice ) {
+			return array(
+				'type'    => 'success',
+				'message' => __( 'Post has been scheduled successfully.', 'social-media-scheduler' ),
+			);
+		}
+
+		if ( 'deleted' === $notice ) {
+			return array(
+				'type'    => 'success',
+				'message' => __( 'Post has been deleted successfully.', 'social-media-scheduler' ),
+			);
+		}
+
+		if ( 'error' === $notice ) {
+			$message = isset( $_GET['sms_message'] ) ? sanitize_text_field( wp_unslash( $_GET['sms_message'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+
+			return array(
+				'type'    => 'error',
+				'message' => '' !== $message ? $message : __( 'An error occurred while publishing the post.', 'social-media-scheduler' ),
+			);
+		}
+
+		return null;
 	}
 
 	/**

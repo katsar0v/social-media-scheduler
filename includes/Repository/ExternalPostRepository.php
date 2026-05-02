@@ -51,6 +51,25 @@ final class ExternalPostRepository {
 	}
 
 	/**
+	 * @return list<array<string,mixed>>
+	 */
+	public function list_by_range( string $from, string $to ): array {
+		global $wpdb;
+
+		$table = Installer::table_name( 'sms_external_post' );
+		$rows  = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT * FROM {$table} WHERE published_at >= %s AND published_at < %s ORDER BY published_at DESC, id DESC",
+				self::input_to_mysql( $from ),
+				self::input_to_mysql( $to )
+			),
+			ARRAY_A
+		);
+
+		return array_map( array( $this, 'map_row' ), $rows ?: array() );
+	}
+
+	/**
 	 * @param array<string,mixed> $input External post fields.
 	 * @return array<string,mixed>
 	 */
