@@ -92,13 +92,13 @@ final class SettingsService {
 			$normalized['defaultPlatform'] = $platform;
 		}
 
-		foreach ( array( 'metaAppId', 'metaAppSecret', 'tiktokClientKey', 'tiktokClientSecret', 'tiktokRedirectUri', 'baseUrl' ) as $key ) {
+		foreach ( array( 'metaAppId', 'metaAppSecret', 'tiktokClientKey', 'tiktokClientSecret', 'baseUrl' ) as $key ) {
 			if ( array_key_exists( $key, $input ) ) {
 				$normalized[ $key ] = trim( (string) $input[ $key ] );
 			}
 		}
 
-		foreach ( array( 'tiktokRedirectUri', 'baseUrl' ) as $url_key ) {
+		foreach ( array( 'baseUrl' ) as $url_key ) {
 			if ( ! empty( $normalized[ $url_key ] ) && ! wp_http_validate_url( (string) $normalized[ $url_key ] ) ) {
 				throw new SettingsValidationException(
 					sprintf(

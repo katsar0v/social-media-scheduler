@@ -36,7 +36,6 @@
 			metaAppSecret: data.get('metaAppSecret'),
 			tiktokClientKey: data.get('tiktokClientKey'),
 			tiktokClientSecret: data.get('tiktokClientSecret'),
-			tiktokRedirectUri: data.get('tiktokRedirectUri'),
 			baseUrl: data.get('baseUrl'),
 			removeOnUninstall: Boolean(data.get('removeOnUninstall')),
 		};

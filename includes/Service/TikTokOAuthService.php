@@ -77,6 +77,10 @@ final class TikTokOAuthService {
 		);
 	}
 
+	public static function redirect_uri(): string {
+		return rest_url( 'sms/v1/auth/tiktok/callback' );
+	}
+
 	public function is_configured(): bool {
 		$settings = $this->settings_repository->get();
 
@@ -114,7 +118,7 @@ final class TikTokOAuthService {
 		return array(
 			'clientKey'    => $client_key,
 			'clientSecret' => $secret,
-			'redirectUri'  => (string) ( $settings['tiktokRedirectUri'] ?: rest_url( 'sms/v1/auth/tiktok/callback' ) ),
+			'redirectUri'  => self::redirect_uri(),
 		);
 	}
 }

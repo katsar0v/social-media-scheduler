@@ -7,8 +7,9 @@
 
 declare(strict_types=1);
 
-$settings          = isset( $settings ) && is_array( $settings ) ? $settings : array();
-$meta_redirect_uri = rest_url( 'sms/v1/auth/meta/callback' );
+$settings            = isset( $settings ) && is_array( $settings ) ? $settings : array();
+$meta_redirect_uri   = rest_url( 'sms/v1/auth/meta/callback' );
+$tiktok_redirect_uri = rest_url( 'sms/v1/auth/tiktok/callback' );
 $timezones         = array(
 	'Europe/Sofia',
 	'Europe/London',
@@ -81,7 +82,7 @@ $timezones         = array(
 				<input id="sms-tiktok-client-secret" name="tiktokClientSecret" type="password" value="<?php echo esc_attr( (string) ( $settings['tiktokClientSecret'] ?? '' ) ); ?>" autocomplete="new-password" />
 
 				<label for="sms-tiktok-redirect-uri"><?php esc_html_e( 'TikTok Redirect URI', 'social-media-scheduler' ); ?></label>
-				<input id="sms-tiktok-redirect-uri" name="tiktokRedirectUri" type="url" value="<?php echo esc_attr( (string) ( $settings['tiktokRedirectUri'] ?? rest_url( 'sms/v1/auth/tiktok/callback' ) ) ); ?>" />
+				<input id="sms-tiktok-redirect-uri" type="url" value="<?php echo esc_attr( $tiktok_redirect_uri ); ?>" readonly disabled />
 
 				<label for="sms-base-url"><?php esc_html_e( 'Base URL Override', 'social-media-scheduler' ); ?></label>
 				<input id="sms-base-url" name="baseUrl" type="url" value="<?php echo esc_attr( (string) ( $settings['baseUrl'] ?? home_url() ) ); ?>" />

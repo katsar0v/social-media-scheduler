@@ -44,7 +44,6 @@ final class SettingsRepository {
 			'metaAppSecret',
 			'tiktokClientKey',
 			'tiktokClientSecret',
-			'tiktokRedirectUri',
 			'baseUrl',
 			'removeOnUninstall',
 		);
@@ -73,9 +72,10 @@ final class SettingsRepository {
 		$normalized = array_merge( Installer::default_settings(), $settings );
 		unset( $normalized['defaultPostStatus'], $normalized['brandHashtags'] );
 
-		$normalized['calendarWeekStart'] = (int) $normalized['calendarWeekStart'];
-		$normalized['metaRedirectUri']   = rest_url( 'sms/v1/auth/meta/callback' );
-		$normalized['removeOnUninstall'] = (bool) $normalized['removeOnUninstall'];
+		$normalized['calendarWeekStart']  = (int) $normalized['calendarWeekStart'];
+		$normalized['metaRedirectUri']    = rest_url( 'sms/v1/auth/meta/callback' );
+		$normalized['tiktokRedirectUri']  = rest_url( 'sms/v1/auth/tiktok/callback' );
+		$normalized['removeOnUninstall']  = (bool) $normalized['removeOnUninstall'];
 		$normalized['updatedAt']         = (string) ( $normalized['updatedAt'] ?? gmdate( DATE_ATOM ) );
 
 		return $normalized;
