@@ -334,5 +334,30 @@ jQuery(function($) {
 			alert('<?php echo esc_js( __( 'API key copied to clipboard!', 'social-media-scheduler' ) ); ?>');
 		});
 	});
+
+	// Handle "all" permission checkbox
+	$(document).on('change', '#sms-api-key-form input[value="all"]', function() {
+		var isChecked = $(this).is(':checked');
+		$('#sms-api-key-form .sms-permission-checkboxes input[type="checkbox"]').not(this).prop('checked', isChecked);
+	});
+
+	// Handle other permission checkboxes to uncheck "all" if one is unchecked
+	$(document).on('change', '#sms-api-key-form .sms-permission-checkboxes input[type="checkbox"]:not([value="all"])', function() {
+		if (!$(this).is(':checked')) {
+			$('#sms-api-key-form input[value="all"]').prop('checked', false);
+		} else {
+			// Check if all others are checked, then check "all"
+			var allOthersChecked = true;
+			$('#sms-api-key-form .sms-permission-checkboxes input[type="checkbox"]:not([value="all"])').each(function() {
+				if (!$(this).is(':checked')) {
+					allOthersChecked = false;
+					return false;
+				}
+			});
+			if (allOthersChecked) {
+				$('#sms-api-key-form input[value="all"]').prop('checked', true);
+			}
+		}
+	});
 });
 </script>

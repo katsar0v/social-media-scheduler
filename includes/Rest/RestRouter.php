@@ -123,6 +123,18 @@ final class RestRouter {
 
 		register_rest_route(
 			self::NAMESPACE,
+			'/media',
+			array(
+				array(
+					'methods'             => 'POST',
+					'callback'            => array( $media, 'upload' ),
+					'permission_callback' => array( self::class, 'permission_callback' ),
+				),
+			)
+		);
+
+		register_rest_route(
+			self::NAMESPACE,
 			'/media/(?P<id>\d+)',
 			array(
 				array(
@@ -386,6 +398,10 @@ final class RestRouter {
 		}
 
 		// Media routes
+		if ( preg_match( '#^/sms/v1/media$#', $route ) ) {
+			return array( \KatsarovDesign\SocialMediaScheduler\Domain\ApiKey::PERMISSION_POSTS_WRITE );
+		}
+
 		if ( preg_match( '#^/sms/v1/media/#', $route ) ) {
 			return array( \KatsarovDesign\SocialMediaScheduler\Domain\ApiKey::PERMISSION_POSTS_WRITE );
 		}

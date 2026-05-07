@@ -75,6 +75,48 @@ final class MediaService {
 		return false !== wp_delete_attachment( $attachment_id, true );
 	}
 
+	/**
+	 * Upload a file to the WordPress media library.
+	 *
+	 * @param array $file_params The $_FILES['file'] array.
+	 * @return array{id: int, url: string, mimeType: string, filename: string}
+	 */
+	public function upload( array $file_params ): array {
+		if ( ! function_exists( 'wp_handle_upload' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/file.php';
+		}
+
+		$upload = wp_handle_upload( $file_params, array( 'test_form' => false ) );
+
+		if ( isset( $upload['error'] ) ) {
+			throw new RuntimeException( (string) $upload['error'] );
+		}
+
+		$attachment = array(
+			'post_mime_type' => $upload['type'],
+			'post_title'     => sanitize_file_name( pathinfo( (string) $upload['file'], PATHINFO_FILENAME ) ),
+			'post_content'   => '',
+			'post_status'    => 'inherit',
+		);
+
+		$attachment_id = wp_insert_attachment( $attachment, (string) $upload['file'] );
+
+		if ( is_wp_error( $attachment_id ) || ! $attachment_id ) {
+			throw new RuntimeException( __( 'Unable to create media attachment.', 'social-media-scheduler' ) );
+		}
+
+		require_once ABSPATH . 'wp-admin/includes/image.php';
+		require_once ABSPATH . 'wp-admin/includes/media.php';
+		wp_update_attachment_metadata( (int) $attachment_id, wp_generate_attachment_metadata( (int) $attachment_id, (string) $upload['file'] ) );
+
+		return array(
+			'id'       => (int) $attachment_id,
+			'url'      => (string) $upload['url'],
+			'mimeType' => (string) $upload['type'],
+			'filename' => basename( (string) $upload['file'] ),
+		);
+	}
+
 	public function prepare_for_instagram( int $attachment_id ): int {
 		$this->assert_attachment_exists( $attachment_id );
 
@@ -119,6 +161,7 @@ final class MediaService {
 		}
 
 		require_once ABSPATH . 'wp-admin/includes/image.php';
+		require_once ABSPATH . 'wp-admin/includes/media.php';
 		wp_update_attachment_metadata( (int) $new_id, wp_generate_attachment_metadata( (int) $new_id, $target ) );
 
 		return (int) $new_id;
